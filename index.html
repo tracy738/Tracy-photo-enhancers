@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracy Photo Enhancer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #0A0A0D;
+    --bg-panel: #121216;
+    --bg-raised: #191A1F;
+    --line: #26272D;
+    --line-soft: #1C1D22;
+    --ink: #FAFAF8;
+    --ink-dim: #8B8B92;
+    --ink-faint: #56565E;
+    --rose: #FF4D6D;
+    --amber: #FFB23E;
+    --grad: linear-gradient(115deg, var(--rose), var(--amber));
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+
+  body{
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 20px 28px;
+    border-bottom:1px solid var(--line-soft);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+
+  .brand-mark{
+    width:34px; height:34px;
+    border-radius:9px;
+    background: var(--grad);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+
+  .brand-mark svg{ width:18px; height:18px; color:#0A0A0D; }
+
+  .brand-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.2rem;
+    letter-spacing:-0.01em;
+    line-height:1;
+  }
+
+  .brand-name em{
+    font-style:italic;
+    font-weight:500;
+    color: var(--ink-dim);
+    font-size:0.95rem;
+  }
+
+  .status-pill{
+    font-size:0.74rem;
+    color: var(--ink-dim);
+    display:flex;
+    align-items:center;
+    gap:7px;
+    border:1px solid var(--line);
+    padding:6px 13px;
+    border-radius:100px;
+  }
+
+  .status-pill .led{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: #3DDC97;
+    box-shadow: 0 0 8px #3DDC97;
+  }
+
+  /* ============ LAYOUT ============ */
+  .workspace{
+    flex:1;
+    display:flex;
+    width:100%;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:296px;
+    flex-shrink:0;
+    border-right:1px solid var(--line-soft);
+    padding: 24px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    overflow-y:auto;
+  }
+
+  .panel-title{
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+    margin-bottom:13px;
+  }
+
+  /* Presets */
+  .presets{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:9px;
+  }
+
+  .preset-card{
+    border:1px solid var(--line);
+    background: var(--bg-panel);
+    border-radius:10px;
+    padding:12px 11px;
+    cursor:pointer;
+    transition: border-color .18s ease, transform .12s ease;
+    text-align:left;
+  }
+
+  .preset-card:hover{ border-color:#3A3B42; }
+
+  .preset-card.active{
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px var(--amber);
+  }
+
+  .preset-card .swatch{
+    width:100%; height:30px;
+    border-radius:6px;
+    margin-bottom:8px;
+  }
+
+  .preset-card span{
+    font-size:0.76rem;
+    font-weight:600;
+    display:block;
+    margin-bottom:1px;
+  }
+
+  .preset-card small{
+    font-size:0.66rem;
+    color: var(--ink-faint);
+  }
+
+  /* Sliders */
+  .sliders{ display:flex; flex-direction:column; gap:16px; }
+
+  .slider-row{ display:flex; flex-direction:column; gap:7px; }
+
+  .slider-row .row-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.8rem;
+  }
+
+  .slider-row .row-top span{ color: var(--ink); font-weight:500; }
+  .slider-row .row-top b{ color: var(--ink-dim); font-weight:500; font-variant-numeric: tabular-nums; }
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    border-radius:4px;
+    background: var(--line);
+    outline:none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px; height:14px;
+    border-radius:50%;
+    background: var(--ink);
+    cursor:pointer;
+    border:3px solid var(--bg-panel);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  input[type="range"]::-moz-range-thumb{
+    width:14px; height:14px;
+    border-radius:50%;
+    background: var(--ink);
+    cursor:pointer;
+    border:3px solid var(--bg-panel);
+  }
+
+  .reset-link{
+    font-size:0.78rem;
+    color: var(--ink-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    text-decoration-color: var(--line);
+    align-self:flex-start;
+    padding:0;
+    transition: color .15s ease;
+  }
+
+  .reset-link:hover{ color: var(--ink-dim); }
+
+  .sidebar-footer{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .btn{
+    font-family:'Inter', sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    padding:12px 16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background: var(--bg-raised);
+    color: var(--ink);
+    cursor:pointer;
+    transition: border-color .18s ease, transform .12s ease, filter .18s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+  }
+
+  .btn:hover{ border-color:#3A3B42; transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0); }
+  .btn svg{ width:15px; height:15px; }
+
+  .btn.primary{
+    background: var(--grad);
+    border:none;
+    color:#0A0A0D;
+  }
+
+  .btn.primary:hover{ filter: brightness(1.08); }
+
+  .btn.primary:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+    filter:none;
+    transform:none;
+  }
+
+  .btn.primary.confirmed{
+    background: #3DDC97;
+    color: #08130D;
+  }
+
+  /* ---- Stage ---- */
+  .stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 40px;
+    position:relative;
+    min-height: calc(100vh - 77px);
+  }
+
+  /* Empty state / dropzone */
+  .dropzone{
+    width:100%;
+    max-width:620px;
+    aspect-ratio:4/3;
+    border:1.5px dashed var(--line);
+    border-radius:22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    cursor:pointer;
+    transition: border-color .25s ease, background .25s ease;
+    position:relative;
+  }
+
+  .dropzone:hover{ border-color: var(--rose); background: rgba(255,77,109,0.03); }
+  .dropzone.drag{ border-color: var(--amber); background: rgba(255,178,62,0.05); }
+
+  .dz-icon{
+    width:60px; height:60px;
+    border-radius:50%;
+    background: var(--bg-panel);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .dz-icon svg{ width:24px; height:24px; color: var(--ink-dim); }
+
+  .dz-text strong{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.25rem;
+    margin-bottom:5px;
+    text-align:center;
+  }
+
+  .dz-text span{ color: var(--ink-faint); font-size:0.86rem; }
+
+  input[type="file"]{ display:none; }
+
+  /* Viewer */
+  .viewer{
+    display:none;
+    width:100%;
+    max-width:880px;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
+  }
+
+  .compare{
+    position:relative;
+    width:100%;
+    border-radius:18px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    border:1px solid var(--line);
+  }
+
+  .compare img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    background:#000;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+
+  .after-wrap{
+    position:absolute; inset:0;
+    overflow:hidden;
+    clip-path: inset(0 50% 0 0);
+  }
+
+  .slider-handle{
+    position:absolute; top:0; bottom:0; left:50%;
+    width:2px; background: var(--ink);
+    cursor: ew-resize; z-index:5;
+  }
+
+  .slider-handle::after{
+    content:"";
+    position:absolute; top:50%; left:50%;
+    width:40px; height:40px;
+    border-radius:50%;
+    background: var(--ink);
+    transform: translate(-50%,-50%);
+  }
+
+  .slider-handle .grip{
+    position:absolute; top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    z-index:6; display:flex; gap:3px; align-items:center;
+  }
+
+  .slider-handle .grip span{
+    width:2.5px; height:13px;
+    background: var(--bg);
+    border-radius:2px;
+  }
+
+  .badge{
+    position:absolute; top:14px;
+    font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em;
+    padding:6px 11px;
+    border-radius:7px;
+    background: rgba(10,10,13,0.7);
+    backdrop-filter: blur(8px);
+    z-index:4;
+  }
+
+  .badge.before{ left:14px; color: var(--ink-dim); }
+  .badge.after{ right:14px; color: var(--amber); }
+
+  /* film-strip signature loading state */
+  .filmstrip-overlay{
+    position:absolute; inset:0; z-index:8;
+    display:none;
+    align-items:center; justify-content:center;
+    background: rgba(10,10,13,0.55);
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .filmstrip-overlay.active{ display:flex; }
+
+  .sprockets{
+    display:flex;
+    gap:7px;
+  }
+
+  .sprockets span{
+    width:9px; height:13px;
+    border-radius:2px;
+    background: var(--line);
+    animation: sprocket-pulse 1s ease-in-out infinite;
+  }
+
+  .sprockets span:nth-child(1){ animation-delay: 0s; }
+  .sprockets span:nth-child(2){ animation-delay: .1s; }
+  .sprockets span:nth-child(3){ animation-delay: .2s; }
+  .sprockets span:nth-child(4){ animation-delay: .3s; }
+  .sprockets span:nth-child(5){ animation-delay: .4s; }
+  .sprockets span:nth-child(6){ animation-delay: .5s; }
+  .sprockets span:nth-child(7){ animation-delay: .6s; }
+
+  @keyframes sprocket-pulse{
+    0%, 100%{ background: var(--line); transform: scaleY(1); }
+    50%{ background: var(--amber); transform: scaleY(1.4); }
+  }
+
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .filmstrip-label{
+    font-family:'Fraunces', serif;
+    font-size:0.85rem;
+    font-weight:500;
+    color: var(--ink-dim);
+    letter-spacing:0.02em;
+  }
+
+  /* Meta row under image */
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    font-size:0.78rem;
+    color: var(--ink-faint);
+  }
+
+  .meta-row .filename{
+    color: var(--ink-dim);
+    font-weight:500;
+    max-width:280px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .stage-actions{
+    display:flex;
+    gap:10px;
+    width:100%;
+  }
+
+  .stage-actions .btn{ flex:1; }
+
+  canvas{ display:none; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 880px){
+    .workspace{ flex-direction:column; }
+    .sidebar{
+      width:100%;
+      border-right:none;
+      border-bottom:1px solid var(--line-soft);
+      flex-direction:column;
+    }
+    .stage{ min-height:auto; padding:28px 20px; }
+  }
+
+  @media (max-width:480px){
+    .topbar{ padding:16px 18px; }
+    .presets{ grid-template-columns: 1fr 1fr; }
+    .badge{ font-size:0.6rem; padding:4px 8px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sprockets span{ animation:none; }
+  }
+
+  /* Focus visibility */
+  button:focus-visible, input:focus-visible, .dropzone:focus-visible{
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="4"/>
+          <path d="M3 9a2 2 0 0 1 2-2h1.5l1-1.5h9l1 1.5H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </div>
+      <div class="brand-name">Tracy <em>Photo Enhancer</em></div>
+    </div>
+    <div class="status-pill"><span class="led"></span> on-device · private</div>
+  </div>
+
+  <div class="workspace">
+
+    <aside class="sidebar">
+      <div>
+        <div class="panel-title">Presets</div>
+        <div class="presets" id="presets">
+          <button class="preset-card active" data-preset="natural">
+            <div class="swatch" style="background:linear-gradient(135deg,#5b6b73,#9aa9ad);"></div>
+            <span>Natural</span><small>Balanced lift</small>
+          </button>
+          <button class="preset-card" data-preset="vivid">
+            <div class="swatch" style="background:linear-gradient(135deg,#FF4D6D,#FFB23E);"></div>
+            <span>Vivid</span><small>Bold color</small>
+          </button>
+          <button class="preset-card" data-preset="portrait">
+            <div class="swatch" style="background:linear-gradient(135deg,#e8b89a,#f6d8c4);"></div>
+            <span>Portrait</span><small>Soft skin</small>
+          </button>
+          <button class="preset-card" data-preset="mono">
+            <div class="swatch" style="background:linear-gradient(135deg,#2b2b2e,#c9c9cc);"></div>
+            <span>Mono</span><small>Black &amp; white</small>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title">Adjust</div>
+        <div class="sliders">
+          <div class="slider-row">
+            <div class="row-top"><span>Brightness</span><b id="valBrightness">+8</b></div>
+            <input type="range" id="brightness" min="-30" max="30" value="8">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Contrast</span><b id="valContrast">22</b></div>
+            <input type="range" id="contrast" min="0" max="60" value="22">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Saturation</span><b id="valSaturation">28</b></div>
+            <input type="range" id="saturation" min="-40" max="60" value="28">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Sharpen</span><b id="valSharpen">45</b></div>
+            <input type="range" id="sharpen" min="0" max="100" value="45">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Warmth</span><b id="valWarmth">0</b></div>
+            <input type="range" id="warmth" min="-30" max="30" value="0">
+          </div>
+        </div>
+        <button class="reset-link" id="resetSliders" style="margin-top:14px;">Reset to defaults</button>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn" id="newPhotoBtn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New photo
+        </button>
+        <button class="btn primary" id="downloadBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="dropzone" id="dropzone" tabindex="0">
+        <div class="dz-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="dz-text">
+          <strong>Drop a photo to begin</strong>
+          <span>or click to browse — JPG, PNG, WEBP</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <div class="viewer" id="viewer">
+        <div class="compare" id="compare">
+          <img id="beforeImg" src="" alt="Original">
+          <div class="after-wrap" id="afterWrap">
+            <img id="afterImg" src="" alt="Enhanced">
+          </div>
+          <div class="slider-handle" id="handle">
+            <div class="grip"><span></span><span></span></div>
+          </div>
+          <div class="badge before">ORIGINAL</div>
+          <div class="badge after">ENHANCED</div>
+
+          <div class="filmstrip-overlay" id="procOverlay">
+            <div class="sprockets">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="filmstrip-label">Developing…</div>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <span class="filename" id="filename">photo.jpg</span>
+          <span id="dimensions">— × —</span>
+        </div>
+
+        <div class="stage-actions">
+          <button class="btn" id="newPhotoBtnMobile">New photo</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <canvas id="workCanvas"></canvas>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const viewer = document.getElementById('viewer');
+    const beforeImg = document.getElementById('beforeImg');
+    const afterImg = document.getElementById('afterImg');
+    const afterWrap = document.getElementById('afterWrap');
+    const handle = document.getElementById('handle');
+    const compare = document.getElementById('compare');
+    const procOverlay = document.getElementById('procOverlay');
+    const newPhotoBtn = document.getElementById('newPhotoBtn');
+    const newPhotoBtnMobile = document.getElementById('newPhotoBtnMobile');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const workCanvas = document.getElementById('workCanvas');
+    const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
+    const filenameEl = document.getElementById('filename');
+    const dimensionsEl = document.getElementById('dimensions');
+    const resetSlidersBtn = document.getElementById('resetSliders');
+
+    const sliders = {
+      brightness: document.getElementById('brightness'),
+      contrast: document.getElementById('contrast'),
+      saturation: document.getElementById('saturation'),
+      sharpen: document.getElementById('sharpen'),
+      warmth: document.getElementById('warmth'),
+    };
+    const valLabels = {
+      brightness: document.getElementById('valBrightness'),
+      contrast: document.getElementById('valContrast'),
+      saturation: document.getElementById('valSaturation'),
+      sharpen: document.getElementById('valSharpen'),
+      warmth: document.getElementById('valWarmth'),
+    };
+
+    const presetButtons = document.querySelectorAll('.preset-card');
+
+    const PRESETS = {
+      natural:  { brightness: 8,  contrast: 22, saturation: 28, sharpen: 45, warmth: 0,   mono:false },
+      vivid:    { brightness: 10, contrast: 38, saturation: 55, sharpen: 55, warmth: 6,    mono:false },
+      portrait: { brightness: 12, contrast: 14, saturation: 18, sharpen: 20, warmth: 10,   mono:false },
+      mono:     { brightness: 6,  contrast: 32, saturation: 0,  sharpen: 50, warmth: 0,    mono:true  },
+    };
+
+    let originalImage = null;
+    let enhancedDataUrl = null;
+    let activePreset = 'natural';
+    let debounceTimer = null;
+
+    function applyPresetToSliders(preset){
+      const p = PRESETS[preset];
+      sliders.brightness.value = p.brightness;
+      sliders.contrast.value = p.contrast;
+      sliders.saturation.value = p.saturation;
+      sliders.sharpen.value = p.sharpen;
+      sliders.warmth.value = p.warmth;
+      syncLabels();
+    }
+
+    function syncLabels(){
+      valLabels.brightness.textContent = (sliders.brightness.value>=0?'+':'') + sliders.brightness.value;
+      valLabels.contrast.textContent = sliders.contrast.value;
+      valLabels.saturation.textContent = (sliders.saturation.value>=0?'+':'') + sliders.saturation.value;
+      valLabels.sharpen.textContent = sliders.sharpen.value;
+      valLabels.warmth.textContent = (sliders.warmth.value>=0?'+':'') + sliders.warmth.value;
+    }
+
+    presetButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        presetButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activePreset = btn.dataset.preset;
+        applyPresetToSliders(activePreset);
+        if (originalImage) runEnhancement();
+      });
+    });
+
+    Object.values(sliders).forEach(s => {
+      s.addEventListener('input', () => {
+        syncLabels();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => { if (originalImage) runEnhancement(); }, 200);
+      });
+    });
+
+    resetSlidersBtn.addEventListener('click', () => {
+      applyPresetToSliders(activePreset);
+      if (originalImage) runEnhancement();
+    });
+
+    syncLabels();
+
+    // ---- Drag & drop / click ----
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+    });
+
+    ['dragenter','dragover'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+    );
+    ['dragleave','drop'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+    );
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file){
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          originalImage = img;
+          previewSourceData = null;
+          beforeImg.src = e.target.result;
+          dropzone.style.display = 'none';
+          viewer.style.display = 'flex';
+          newPhotoBtn.style.display = 'flex';
+          downloadBtn.disabled = false;
+          filenameEl.textContent = file.name;
+          dimensionsEl.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+          runEnhancement();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ---- Shared pixel-processing core ----
+    // Used directly on the main thread as a guaranteed-working fallback,
+    // and also embedded into the worker source below when the host allows
+    // Web Workers. Some sandboxed hosting environments block constructing
+    // a Worker from a blob: URL for security reasons — when that happens
+    // we transparently fall back to running this same code inline.
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+    function clampInt(v, min, max){ return Math.max(min, Math.min(max, v|0)); }
+    function lerp(a,b,t){ return a + (b-a)*t; }
+
+    function boxBlur(data, w, h, radius){
+      const out = new Uint8ClampedArray(data.length);
+      const temp = new Float32Array(data.length);
+      for (let y=0; y<h; y++){
+        for (let x=0; x<w; x++){
+          let r=0,g=0,b=0,a=0,n=0;
+          for (let dx=-radius; dx<=radius; dx++){
+            const xx = clampInt(x+dx, 0, w-1);
+            const idx = (y*w+xx)*4;
+            r+=data[idx]; g+=data[idx+1]; b+=data[idx+2]; a+=data[idx+3]; n++;
+          }
+          const idx=(y*w+x)*4;
+          temp[idx]=r/n; temp[idx+1]=g/n; temp[idx+2]=b/n; temp[idx+3]=a/n;
+        }
+      }
+      for (let y=0; y<h; y++){
+        for (let x=0; x<w; x++){
+          let r=0,g=0,b=0,a=0,n=0;
+          for (let dy=-radius; dy<=radius; dy++){
+            const yy = clampInt(y+dy, 0, h-1);
+            const idx = (yy*w+x)*4;
+            r+=temp[idx]; g+=temp[idx+1]; b+=temp[idx+2]; a+=temp[idx+3]; n++;
+          }
+          const idx=(y*w+x)*4;
+          out[idx]=r/n; out[idx+1]=g/n; out[idx+2]=b/n; out[idx+3]=a/n;
+        }
+      }
+      return out;
+    }
+
+    function processPixels(data, w, h, opts){
+      let rSum=0,gSum=0,bSum=0,count=0;
+      for (let i=0; i<data.length; i+=16){
+        rSum += data[i]; gSum += data[i+1]; bSum += data[i+2]; count++;
+      }
+      const rAvg = rSum/count, gAvg = gSum/count, bAvg = bSum/count;
+      const gray = (rAvg+gAvg+bAvg)/3;
+      const wbStrength = 0.5;
+      const rGain = lerp(1, clamp(gray/rAvg, 0.85, 1.2), wbStrength);
+      const gGain = lerp(1, clamp(gray/gAvg, 0.85, 1.2), wbStrength);
+      const bGain = lerp(1, clamp(gray/bAvg, 0.85, 1.2), wbStrength);
+
+      const contrastFactor = 1 + (opts.contrast / 100);
+      const satFactor = 1 + (opts.saturation / 100);
+      const brightnessLift = opts.brightness;
+      const warmR = 1 + (opts.warmth > 0 ? opts.warmth/200 : 0);
+      const warmB = 1 + (opts.warmth < 0 ? -opts.warmth/200 : 0);
+      const coolB = 1 + (opts.warmth > 0 ? opts.warmth/250 : 0);
+      const coolR = 1 + (opts.warmth < 0 ? -opts.warmth/250 : 0);
+
+      for (let i=0; i<data.length; i+=4){
+        let r = data[i]   * rGain;
+        let g = data[i+1] * gGain;
+        let b = data[i+2] * bGain;
+
+        r *= warmR;
+        b *= warmB / coolB;
+        r *= (opts.warmth < 0 ? coolR : 1);
+
+        r = (r - 128) * contrastFactor + 128 + brightnessLift;
+        g = (g - 128) * contrastFactor + 128 + brightnessLift;
+        b = (b - 128) * contrastFactor + 128 + brightnessLift;
+
+        const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+
+        if (opts.mono){
+          r = g = b = lum;
+        } else {
+          r = lum + (r - lum) * satFactor;
+          g = lum + (g - lum) * satFactor;
+          b = lum + (b - lum) * satFactor;
+        }
+
+        data[i]   = clamp(r, 0, 255);
+        data[i+1] = clamp(g, 0, 255);
+        data[i+2] = clamp(b, 0, 255);
+      }
+
+      if (opts.sharpen > 0){
+        const amount = opts.sharpen / 100;
+        const blurred = boxBlur(data, w, h, 1);
+        const sharpAmount = 0.65 * amount;
+        for (let i=0; i<data.length; i+=4){
+          for (let c=0;c<3;c++){
+            const diff = data[i+c] - blurred[i+c];
+            data[i+c] = clamp(data[i+c] + diff * sharpAmount * 2, 0, 255);
+          }
+        }
+      }
+
+      return data;
+    }
+
+    // ---- Try to set up a Web Worker; fall back silently if blocked ----
+    let worker = null;
+    let workerAvailable = false;
+
+    function tryCreateWorker(){
+      try {
+        const workerSource = `
+          ${clamp.toString()}
+          ${clampInt.toString()}
+          ${lerp.toString()}
+          ${boxBlur.toString()}
+          ${processPixels.toString()}
+          self.onmessage = function(e){
+            const { reqId, buffer, w, h, opts } = e.data;
+            const data = new Uint8ClampedArray(buffer);
+            const result = processPixels(data, w, h, opts);
+            self.postMessage({ reqId, buffer: result.buffer, w, h }, [result.buffer]);
+          };
+        `;
+        const workerBlob = new Blob([workerSource], { type: 'application/javascript' });
+        const w = new Worker(URL.createObjectURL(workerBlob));
+        // Surface async construction failures too (some hosts reject at
+        // first postMessage rather than at `new Worker(...)`).
+        w.onerror = () => {
+          workerAvailable = false;
+          worker = null;
+        };
+        return w;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    worker = tryCreateWorker();
+    workerAvailable = !!worker;
+
+    // Cap the working resolution for snappy previews. The same resolution
+    // is what gets downloaded — no separate re-processing step, so the
+    // download is instant.
+    const PREVIEW_MAX_DIM = 2000;
+
+    let requestCounter = 0;
+    let latestAppliedReqId = -1;
+    let previewSourceData = null; // { data, w, h } at preview resolution
+    let watchdogTimer = null;
+
+    if (worker){
+      worker.onmessage = (e) => {
+        const { reqId, buffer, w, h } = e.data;
+        if (reqId < latestAppliedReqId) return; // stale result, discard
+        latestAppliedReqId = reqId;
+        clearTimeout(watchdogTimer);
+        applyResultToPreview(buffer, w, h);
+      };
+    }
+
+    function getCurrentOpts(){
+      return {
+        brightness: parseFloat(sliders.brightness.value),
+        contrast: parseFloat(sliders.contrast.value),
+        saturation: parseFloat(sliders.saturation.value),
+        sharpen: parseFloat(sliders.sharpen.value),
+        warmth: parseFloat(sliders.warmth.value),
+        mono: PRESETS[activePreset].mono,
+      };
+    }
+
+    function buildPreviewSource(img){
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, PREVIEW_MAX_DIM / Math.max(w, h));
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+      workCanvas.width = w;
+      workCanvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      previewSourceData = { data: imageData.data, w, h };
+    }
+
+    function applyResultToPreview(data, w, h){
+      const imageData = new ImageData(new Uint8ClampedArray(data), w, h);
+      workCanvas.width = w;
+      workCanvas.height = h;
+      ctx.putImageData(imageData, 0, 0);
+
+      const dataUrl = workCanvas.toDataURL('image/jpeg', 0.92);
+      enhancedDataUrl = dataUrl;
+
+      afterImg.onload = () => {
+        afterWrap.style.transition = 'opacity .3s ease';
+        afterWrap.style.opacity = 1;
+        procOverlay.classList.remove('active');
+      };
+      afterImg.src = dataUrl;
+    }
+
+    // ---- Core enhancement (fast preview pass) ----
+    function runEnhancement(){
+      if (!originalImage) return;
+      if (!previewSourceData) buildPreviewSource(originalImage);
+
+      procOverlay.classList.add('active');
+      afterWrap.style.opacity = 0;
+
+      const reqId = ++requestCounter;
+      const { data, w, h } = previewSourceData;
+      const opts = getCurrentOpts();
+
+      if (workerAvailable && worker){
+        const copy = new Uint8ClampedArray(data); // worker takes ownership of this buffer
+
+        clearTimeout(watchdogTimer);
+        watchdogTimer = setTimeout(() => {
+          // If a job takes unusually long (very low-power device), surface it
+          // instead of leaving the user staring at "Developing…" forever.
+          const label = procOverlay.querySelector('.filmstrip-label');
+          if (label) label.textContent = 'Still working — large photo…';
+        }, 4000);
+
+        try {
+          worker.postMessage(
+            { reqId, buffer: copy.buffer, w, h, opts },
+            [copy.buffer]
+          );
+          return;
+        } catch (err) {
+          // Posting failed (host revoked worker access mid-session) — fall
+          // through to the main-thread path below instead of hanging.
+          workerAvailable = false;
+        }
+      }
+
+      // Main-thread fallback: still capped to PREVIEW_MAX_DIM so it stays
+      // fast even without a worker. Runs on the next frame so the
+      // "Developing…" animation gets a chance to paint first.
+      requestAnimationFrame(() => {
+        if (reqId < latestAppliedReqId) return;
+        latestAppliedReqId = reqId;
+        const copy = new Uint8ClampedArray(data);
+        const result = processPixels(copy, w, h, opts);
+        applyResultToPreview(result, w, h);
+      });
+    }
+
+    // ---- Before/after slider drag ----
+    let dragging = false;
+    function setHandle(clientX){
+      const rect = compare.getBoundingClientRect();
+      let pct = ((clientX - rect.left) / rect.width) * 100;
+      pct = clamp(pct, 0, 100);
+      handle.style.left = pct + '%';
+      afterWrap.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
+    }
+    handle.addEventListener('mousedown', () => dragging = true);
+    window.addEventListener('mouseup', () => dragging = false);
+    window.addEventListener('mousemove', e => { if (dragging) setHandle(e.clientX); });
+    handle.addEventListener('touchstart', () => dragging = true, {passive:true});
+    window.addEventListener('touchend', () => dragging = false);
+    window.addEventListener('touchmove', e => { if (dragging && e.touches[0]) setHandle(e.touches[0].clientX); }, {passive:true});
+    compare.addEventListener('click', e => {
+      if (e.target === handle || handle.contains(e.target)) return;
+      setHandle(e.clientX);
+    });
+
+    // ---- Buttons ----
+    function resetToDropzone(){
+      viewer.style.display = 'none';
+      dropzone.style.display = 'flex';
+      newPhotoBtn.style.display = 'none';
+      downloadBtn.disabled = true;
+      fileInput.value = '';
+      originalImage = null;
+      handle.style.left = '50%';
+      afterWrap.style.clipPath = 'inset(0 50% 0 0)';
+    }
+    newPhotoBtn.addEventListener('click', resetToDropzone);
+    newPhotoBtnMobile.addEventListener('click', resetToDropzone);
+
+    downloadBtn.addEventListener('click', () => {
+      if (!enhancedDataUrl) return;
+      downloadDataUrl(enhancedDataUrl, buildDownloadName());
+    });
+
+    function buildDownloadName(){
+      const base = (filenameEl.textContent || 'photo').replace(/\.[^/.]+$/, '');
+      return `tracy-${base || 'enhanced'}.jpg`;
+    }
+
+    // Robust download: converts the data URL to a Blob and drives a real,
+    // DOM-attached anchor click. This is more reliable across mobile
+    // browsers and embedded webviews than calling .click() on a detached
+    // <a> with a raw data: URL, which some environments silently ignore.
+    function downloadDataUrl(dataUrl, fileName){
+      try {
+        const [header, base64] = dataUrl.split(',');
+        const mimeMatch = header.match(/data:(.*?);base64/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.rel = 'noopener';
+        a.style.position = 'fixed';
+        a.style.opacity = '0';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Some browsers (notably ones that open the image in a new tab
+        // instead of saving it) need the blob URL kept alive briefly.
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+
+        showDownloadConfirmation();
+      } catch (err) {
+        // Fallback: open in a new tab so the user can long-press/save manually.
+        const win = window.open(dataUrl, '_blank');
+        if (!win) {
+          alert('Could not start the download automatically. Right-click (or long-press) the preview image and choose "Save image as…".');
+        }
+      }
+    }
+
+    function showDownloadConfirmation(){
+      const original = downloadBtn.innerHTML;
+      downloadBtn.classList.add('confirmed');
+      downloadBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Saved
+      `;
+      setTimeout(() => {
+        downloadBtn.innerHTML = original;
+        downloadBtn.classList.remove('confirmed');
+      }, 1800);
+    }
+  </script>
+
+</body>
+</html>
