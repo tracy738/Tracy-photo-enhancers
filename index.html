@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracy Photo Enhancer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #0A0A0D;
+    --bg-panel: #121216;
+    --bg-raised: #191A1F;
+    --line: #26272D;
+    --line-soft: #1C1D22;
+    --ink: #FAFAF8;
+    --ink-dim: #8B8B92;
+    --ink-faint: #56565E;
+    --rose: #FF4D6D;
+    --amber: #FFB23E;
+    --grad: linear-gradient(115deg, var(--rose), var(--amber));
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+  }
+
+  body{
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 20px 28px;
+    border-bottom:1px solid var(--line-soft);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+
+  .brand-mark{
+    width:34px; height:34px;
+    border-radius:9px;
+    background: var(--grad);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+
+  .brand-mark svg{ width:18px; height:18px; color:#0A0A0D; }
+
+  .brand-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.2rem;
+    letter-spacing:-0.01em;
+    line-height:1;
+  }
+
+  .brand-name em{
+    font-style:italic;
+    font-weight:500;
+    color: var(--ink-dim);
+    font-size:0.95rem;
+  }
+
+  .status-pill{
+    font-size:0.74rem;
+    color: var(--ink-dim);
+    display:flex;
+    align-items:center;
+    gap:7px;
+    border:1px solid var(--line);
+    padding:6px 13px;
+    border-radius:100px;
+  }
+
+  .status-pill .led{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: #3DDC97;
+    box-shadow: 0 0 8px #3DDC97;
+  }
+
+  /* ============ LAYOUT ============ */
+  .workspace{
+    flex:1;
+    display:flex;
+    width:100%;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:296px;
+    flex-shrink:0;
+    border-right:1px solid var(--line-soft);
+    padding: 24px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    overflow-y:auto;
+  }
+
+  .panel-title{
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+    margin-bottom:13px;
+  }
+
+  /* Presets */
+  .presets{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:9px;
+  }
+
+  .preset-card{
+    border:1px solid var(--line);
+    background: var(--bg-panel);
+    border-radius:10px;
+    padding:12px 11px;
+    cursor:pointer;
+    transition: border-color .18s ease, transform .12s ease;
+    text-align:left;
+  }
+
+  .preset-card:hover{ border-color:#3A3B42; }
+
+  .preset-card.active{
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px var(--amber);
+  }
+
+  .preset-card .swatch{
+    width:100%; height:30px;
+    border-radius:6px;
+    margin-bottom:8px;
+  }
+
+  .preset-card span{
+    font-size:0.76rem;
+    font-weight:600;
+    display:block;
+    margin-bottom:1px;
+  }
+
+  .preset-card small{
+    font-size:0.66rem;
+    color: var(--ink-faint);
+  }
+
+  /* Sliders */
+  .sliders{ display:flex; flex-direction:column; gap:16px; }
+
+  .slider-row{ display:flex; flex-direction:column; gap:7px; }
+
+  .slider-row .row-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.8rem;
+  }
+
+  .slider-row .row-top span{ color: var(--ink); font-weight:500; }
+  .slider-row .row-top b{ color: var(--ink-dim); font-weight:500; font-variant-numeric: tabular-nums; }
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    border-radius:4px;
+    background: var(--line);
+    outline:none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px; height:14px;
+    border-radius:50%;
+    background: var(--ink);
+    cursor:pointer;
+    border:3px solid var(--bg-panel);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  input[type="range"]::-moz-range-thumb{
+    width:14px; height:14px;
+    border-radius:50%;
+    background: var(--ink);
+    cursor:pointer;
+    border:3px solid var(--bg-panel);
+  }
+
+  .reset-link{
+    font-size:0.78rem;
+    color: var(--ink-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    text-decoration-color: var(--line);
+    align-self:flex-start;
+    padding:0;
+    transition: color .15s ease;
+  }
+
+  .reset-link:hover{ color: var(--ink-dim); }
+
+  /* Tools panel — toggle-style feature cards */
+  .tool-list{ display:flex; flex-direction:column; gap:9px; }
+
+  .tool-card{
+    border:1px solid var(--line);
+    background: var(--bg-panel);
+    border-radius:12px;
+    padding:13px;
+    transition: border-color .18s ease;
+  }
+
+  .tool-card:has(.toggle[aria-checked="true"]),
+  .tool-card.tool-active{
+    border-color: rgba(255,178,62,0.35);
+  }
+
+  .tool-head{
+    display:flex;
+    align-items:flex-start;
+    gap:11px;
+  }
+
+  .tool-icon{
+    width:32px; height:32px;
+    border-radius:9px;
+    background: var(--bg-raised);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    color: var(--ink-dim);
+  }
+
+  .tool-icon svg{ width:16px; height:16px; }
+
+  .tool-text{ flex:1; min-width:0; }
+
+  .tool-text span{
+    display:block;
+    font-size:0.83rem;
+    font-weight:600;
+    margin-bottom:2px;
+  }
+
+  .tool-text small{
+    display:block;
+    font-size:0.71rem;
+    color: var(--ink-faint);
+    line-height:1.35;
+  }
+
+  .toggle{
+    width:36px; height:21px;
+    border-radius:100px;
+    background: var(--line);
+    border:none;
+    cursor:pointer;
+    flex-shrink:0;
+    position:relative;
+    padding:0;
+    transition: background .2s ease;
+    margin-top:2px;
+  }
+
+  .toggle .knob{
+    position:absolute;
+    top:2.5px; left:2.5px;
+    width:16px; height:16px;
+    border-radius:50%;
+    background: var(--ink);
+    transition: transform .2s ease;
+  }
+
+  .toggle[aria-checked="true"]{ background: var(--grad); }
+  .toggle[aria-checked="true"] .knob{ transform: translateX(15px); background:#0A0A0D; }
+
+  .tool-body{
+    display:grid;
+    grid-template-rows: 0fr;
+    opacity:0;
+    overflow:hidden;
+    transition: grid-template-rows .22s ease, opacity .18s ease;
+  }
+
+  .tool-body-inner{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+
+  .tool-body .row-top{ display:flex; justify-content:space-between; font-size:0.78rem; padding-top:12px; }
+  .tool-body .row-top span{ color: var(--ink-dim); }
+  .tool-body .row-top b{ color: var(--ink); font-weight:500; font-variant-numeric: tabular-nums; }
+  .tool-body input[type="range"]{ margin-top:7px; }
+
+  .tool-card:has(.toggle[aria-checked="true"]) .tool-body,
+  .tool-card.tool-active .tool-body{
+    grid-template-rows: 1fr;
+    opacity:1;
+  }
+
+  .sidebar-footer{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .btn{
+    font-family:'Inter', sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    padding:12px 16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background: var(--bg-raised);
+    color: var(--ink);
+    cursor:pointer;
+    transition: border-color .18s ease, transform .12s ease, filter .18s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+  }
+
+  .btn:hover{ border-color:#3A3B42; transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0); }
+  .btn svg{ width:15px; height:15px; }
+
+  .btn.primary{
+    background: var(--grad);
+    border:none;
+    color:#0A0A0D;
+  }
+
+  .btn.primary:hover{ filter: brightness(1.08); }
+
+  .btn.primary:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+    filter:none;
+    transform:none;
+  }
+
+  .btn.primary.confirmed{
+    background: #3DDC97;
+    color: #08130D;
+  }
+
+  /* ---- Stage ---- */
+  .stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 40px;
+    position:relative;
+    min-height: calc(100vh - 77px);
+  }
+
+  /* Empty state / dropzone */
+  .dropzone{
+    width:100%;
+    max-width:620px;
+    aspect-ratio:4/3;
+    border:1.5px dashed var(--line);
+    border-radius:22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    cursor:pointer;
+    transition: border-color .25s ease, background .25s ease;
+    position:relative;
+  }
+
+  .dropzone:hover{ border-color: var(--rose); background: rgba(255,77,109,0.03); }
+  .dropzone.drag{ border-color: var(--amber); background: rgba(255,178,62,0.05); }
+
+  .dz-icon{
+    width:60px; height:60px;
+    border-radius:50%;
+    background: var(--bg-panel);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .dz-icon svg{ width:24px; height:24px; color: var(--ink-dim); }
+
+  .dz-text strong{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.25rem;
+    margin-bottom:5px;
+    text-align:center;
+  }
+
+  .dz-text span{ color: var(--ink-faint); font-size:0.86rem; }
+
+  input[type="file"]{ display:none; }
+
+  /* Viewer */
+  .viewer{
+    display:none;
+    width:100%;
+    max-width:880px;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
+  }
+
+  .compare{
+    position:relative;
+    width:100%;
+    border-radius:18px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    border:1px solid var(--line);
+  }
+
+  .compare img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    background:#000;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+
+  .after-wrap{
+    position:absolute; inset:0;
+    overflow:hidden;
+    clip-path: inset(0 50% 0 0);
+  }
+
+  .slider-handle{
+    position:absolute; top:0; bottom:0; left:50%;
+    width:2px; background: var(--ink);
+    cursor: ew-resize; z-index:5;
+  }
+
+  .slider-handle::after{
+    content:"";
+    position:absolute; top:50%; left:50%;
+    width:40px; height:40px;
+    border-radius:50%;
+    background: var(--ink);
+    transform: translate(-50%,-50%);
+  }
+
+  .slider-handle .grip{
+    position:absolute; top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    z-index:6; display:flex; gap:3px; align-items:center;
+  }
+
+  .slider-handle .grip span{
+    width:2.5px; height:13px;
+    background: var(--bg);
+    border-radius:2px;
+  }
+
+  .badge{
+    position:absolute; top:14px;
+    font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em;
+    padding:6px 11px;
+    border-radius:7px;
+    background: rgba(10,10,13,0.7);
+    backdrop-filter: blur(8px);
+    z-index:4;
+  }
+
+  .badge.before{ left:14px; color: var(--ink-dim); }
+  .badge.after{ right:14px; color: var(--amber); }
+
+  /* film-strip signature loading state */
+  .filmstrip-overlay{
+    position:absolute; inset:0; z-index:8;
+    display:none;
+    align-items:center; justify-content:center;
+    background: rgba(10,10,13,0.55);
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .filmstrip-overlay.active{ display:flex; }
+
+  .sprockets{
+    display:flex;
+    gap:7px;
+  }
+
+  .sprockets span{
+    width:9px; height:13px;
+    border-radius:2px;
+    background: var(--line);
+    animation: sprocket-pulse 1s ease-in-out infinite;
+  }
+
+  .sprockets span:nth-child(1){ animation-delay: 0s; }
+  .sprockets span:nth-child(2){ animation-delay: .1s; }
+  .sprockets span:nth-child(3){ animation-delay: .2s; }
+  .sprockets span:nth-child(4){ animation-delay: .3s; }
+  .sprockets span:nth-child(5){ animation-delay: .4s; }
+  .sprockets span:nth-child(6){ animation-delay: .5s; }
+  .sprockets span:nth-child(7){ animation-delay: .6s; }
+
+  @keyframes sprocket-pulse{
+    0%, 100%{ background: var(--line); transform: scaleY(1); }
+    50%{ background: var(--amber); transform: scaleY(1.4); }
+  }
+
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .filmstrip-label{
+    font-family:'Fraunces', serif;
+    font-size:0.85rem;
+    font-weight:500;
+    color: var(--ink-dim);
+    letter-spacing:0.02em;
+  }
+
+  /* Meta row under image */
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    font-size:0.78rem;
+    color: var(--ink-faint);
+  }
+
+  .meta-row .filename{
+    color: var(--ink-dim);
+    font-weight:500;
+    max-width:280px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .stage-actions{
+    display:flex;
+    gap:10px;
+    width:100%;
+  }
+
+  .stage-actions .btn{ flex:1; }
+  .stage-actions .btn svg{ width:15px; height:15px; }
+
+  .icon-btn{ flex:0 0 auto; width:42px; padding:11px; }
+
+  /* ---- Crop & Rotate mode ---- */
+  .crop-stage{
+    position:absolute; inset:0;
+    z-index:9;
+    display:none;
+    background:#000;
+    overflow:hidden;
+    touch-action:none;
+  }
+
+  .crop-stage.active{ display:block; }
+
+  .crop-stage img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    user-select:none;
+    -webkit-user-drag:none;
+    transition: transform .25s ease;
+  }
+
+  .crop-box{
+    position:absolute;
+    border:1.5px solid var(--amber);
+    box-shadow: 0 0 0 9999px rgba(10,10,13,0.6);
+    cursor:move;
+  }
+
+  .crop-box::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px),
+      linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px);
+    background-size: 33.33% 100%, 33.33% 100%, 100% 33.33%, 100% 33.33%;
+    background-position: 33.33% 0, 66.66% 0, 0 33.33%, 0 66.66%;
+    background-repeat:no-repeat;
+    pointer-events:none;
+  }
+
+  .crop-handle{
+    position:absolute;
+    width:22px; height:22px;
+    background:transparent;
+    touch-action:none;
+  }
+
+  .crop-handle::after{
+    content:"";
+    position:absolute;
+    width:14px; height:14px;
+    background: var(--amber);
+    border-radius:3px;
+  }
+
+  .crop-handle[data-handle="nw"]{ top:-11px; left:-11px; cursor:nwse-resize; }
+  .crop-handle[data-handle="nw"]::after{ top:4px; left:4px; }
+  .crop-handle[data-handle="ne"]{ top:-11px; right:-11px; cursor:nesw-resize; }
+  .crop-handle[data-handle="ne"]::after{ top:4px; right:4px; }
+  .crop-handle[data-handle="sw"]{ bottom:-11px; left:-11px; cursor:nesw-resize; }
+  .crop-handle[data-handle="sw"]::after{ bottom:4px; left:4px; }
+  .crop-handle[data-handle="se"]{ bottom:-11px; right:-11px; cursor:nwse-resize; }
+  .crop-handle[data-handle="se"]::after{ bottom:4px; right:4px; }
+
+  .crop-toolbar{
+    display:none;
+    width:100%;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    background: var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:12px 14px;
+  }
+
+  .crop-toolbar.active{ display:flex; }
+
+  .crop-ratios{
+    display:flex;
+    gap:6px;
+    flex:1;
+  }
+
+  .ratio-btn{
+    font-size:0.76rem;
+    font-weight:600;
+    padding:7px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background: var(--bg-raised);
+    color: var(--ink-dim);
+    cursor:pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+
+  .ratio-btn:hover{ color: var(--ink); }
+  .ratio-btn.active{ border-color: var(--amber); color: var(--ink); }
+
+  .crop-toolbar-actions{
+    display:flex;
+    gap:8px;
+  }
+
+  .crop-toolbar-actions .btn{ width:auto; padding:9px 16px; font-size:0.82rem; }
+
+  canvas{ display:none; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 880px){
+    .workspace{ flex-direction:column; }
+    .sidebar{
+      width:100%;
+      border-right:none;
+      border-bottom:1px solid var(--line-soft);
+      flex-direction:column;
+    }
+    .stage{ min-height:auto; padding:28px 20px; }
+  }
+
+  @media (max-width:480px){
+    .topbar{ padding:16px 18px; }
+    .presets{ grid-template-columns: 1fr 1fr; }
+    .badge{ font-size:0.6rem; padding:4px 8px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sprockets span{ animation:none; }
+  }
+
+  /* Focus visibility */
+  button:focus-visible, input:focus-visible, .dropzone:focus-visible{
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="4"/>
+          <path d="M3 9a2 2 0 0 1 2-2h1.5l1-1.5h9l1 1.5H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </div>
+      <div class="brand-name">Tracy <em>Photo Enhancer</em></div>
+    </div>
+    <div class="status-pill"><span class="led"></span> on-device · private</div>
+  </div>
+
+  <div class="workspace">
+
+    <aside class="sidebar">
+      <div>
+        <div class="panel-title">Presets</div>
+        <div class="presets" id="presets">
+          <button class="preset-card active" data-preset="natural">
+            <div class="swatch" style="background:linear-gradient(135deg,#5b6b73,#9aa9ad);"></div>
+            <span>Natural</span><small>Balanced lift</small>
+          </button>
+          <button class="preset-card" data-preset="vivid">
+            <div class="swatch" style="background:linear-gradient(135deg,#FF4D6D,#FFB23E);"></div>
+            <span>Vivid</span><small>Bold color</small>
+          </button>
+          <button class="preset-card" data-preset="portrait">
+            <div class="swatch" style="background:linear-gradient(135deg,#e8b89a,#f6d8c4);"></div>
+            <span>Portrait</span><small>Soft skin</small>
+          </button>
+          <button class="preset-card" data-preset="mono">
+            <div class="swatch" style="background:linear-gradient(135deg,#2b2b2e,#c9c9cc);"></div>
+            <span>Mono</span><small>Black &amp; white</small>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title">Adjust</div>
+        <div class="sliders">
+          <div class="slider-row">
+            <div class="row-top"><span>Brightness</span><b id="valBrightness">+8</b></div>
+            <input type="range" id="brightness" min="-30" max="30" value="8">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Contrast</span><b id="valContrast">22</b></div>
+            <input type="range" id="contrast" min="0" max="60" value="22">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Saturation</span><b id="valSaturation">28</b></div>
+            <input type="range" id="saturation" min="-40" max="60" value="28">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Sharpen</span><b id="valSharpen">45</b></div>
+            <input type="range" id="sharpen" min="0" max="100" value="45">
+          </div>
+          <div class="slider-row">
+            <div class="row-top"><span>Warmth</span><b id="valWarmth">0</b></div>
+            <input type="range" id="warmth" min="-30" max="30" value="0">
+          </div>
+        </div>
+        <button class="reset-link" id="resetSliders" style="margin-top:14px;">Reset to defaults</button>
+      </div>
+
+      <div>
+        <div class="panel-title">Tools</div>
+        <div class="tool-list">
+
+          <div class="tool-card" data-tool="beautify">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8 15s1.5 2 4 2 4-2 4-2"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>Face &amp; Portrait Beautify</span>
+                <small>Smooths skin, evens tone, subtle glow</small>
+              </div>
+              <button class="toggle" id="toggle-beautify" role="switch" aria-checked="false" aria-label="Toggle Face & Portrait Beautify"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valBeautify">55</b></div>
+              <input type="range" id="beautify" min="0" max="100" value="55">
+            </div></div>
+          </div>
+
+          <div class="tool-card" data-tool="deblur">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9.5 4 15M14.5 9.5 20 4M12 12l8.5-8.5M3.5 20.5 12 12"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>Sharpen Blurry Photos</span>
+                <small>Recovers edges in soft or out-of-focus shots</small>
+              </div>
+              <button class="toggle" id="toggle-deblur" role="switch" aria-checked="false" aria-label="Toggle Sharpen Blurry Photos"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valDeblur">60</b></div>
+              <input type="range" id="deblurAmount" min="0" max="100" value="60">
+            </div></div>
+          </div>
+
+          <div class="tool-card" data-tool="denoise">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c1-4 4-8 9-8s8 4 9 8-4 8-9 8-8-4-9-8Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>Denoise</span>
+                <small>Removes grain while keeping edges crisp</small>
+              </div>
+              <button class="toggle" id="toggle-denoise" role="switch" aria-checked="false" aria-label="Toggle Denoise"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valDenoise">45</b></div>
+              <input type="range" id="denoise" min="0" max="100" value="45">
+            </div></div>
+          </div>
+
+          <div class="tool-card" data-tool="autoTone">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>HDR / Auto-tone</span>
+                <small>Reads the photo's exposure and fixes it automatically</small>
+              </div>
+              <button class="toggle" id="toggle-autoTone" role="switch" aria-checked="false" aria-label="Toggle HDR / Auto-tone"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valAutoTone">70</b></div>
+              <input type="range" id="autoTone" min="0" max="100" value="70">
+            </div></div>
+          </div>
+
+          <div class="tool-card" data-tool="bgBlur">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="5" cy="6" r="1.4" opacity="0.4"/><circle cx="19" cy="6" r="1.4" opacity="0.4"/><circle cx="5" cy="18" r="1.4" opacity="0.4"/><circle cx="19" cy="18" r="1.4" opacity="0.4"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>Background Blur</span>
+                <small>Blurs the background around a centered subject</small>
+              </div>
+              <button class="toggle" id="toggle-bgBlur" role="switch" aria-checked="false" aria-label="Toggle Background Blur"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valBgBlur">55</b></div>
+              <input type="range" id="bgBlur" min="0" max="100" value="55">
+            </div></div>
+          </div>
+
+          <div class="tool-card" data-tool="vignette">
+            <div class="tool-head">
+              <div class="tool-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="3"/><circle cx="12" cy="12" r="4"/></svg>
+              </div>
+              <div class="tool-text">
+                <span>Vignette</span>
+                <small>Softly darkens the corners to frame the subject</small>
+              </div>
+              <button class="toggle" id="toggle-vignette" role="switch" aria-checked="false" aria-label="Toggle Vignette"><span class="knob"></span></button>
+            </div>
+            <div class="tool-body"><div class="tool-body-inner">
+              <div class="row-top"><span>Strength</span><b id="valVignette">35</b></div>
+              <input type="range" id="vignette" min="0" max="100" value="35">
+            </div></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn" id="newPhotoBtn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New photo
+        </button>
+        <button class="btn primary" id="downloadBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="dropzone" id="dropzone" tabindex="0">
+        <div class="dz-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="dz-text">
+          <strong>Drop a photo to begin</strong>
+          <span>or click to browse — JPG, PNG, WEBP</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <div class="viewer" id="viewer">
+        <div class="compare" id="compare">
+          <img id="beforeImg" src="" alt="Original">
+          <div class="after-wrap" id="afterWrap">
+            <img id="afterImg" src="" alt="Enhanced">
+          </div>
+          <div class="slider-handle" id="handle">
+            <div class="grip"><span></span><span></span></div>
+          </div>
+          <div class="badge before">ORIGINAL</div>
+          <div class="badge after">ENHANCED</div>
+
+          <div class="filmstrip-overlay" id="procOverlay">
+            <div class="sprockets">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="filmstrip-label">Developing…</div>
+          </div>
+
+          <!-- Crop & Rotate mode overlay -->
+          <div class="crop-stage" id="cropStage">
+            <img id="cropImg" src="" alt="Crop preview">
+            <div class="crop-box" id="cropBox">
+              <div class="crop-handle" data-handle="nw"></div>
+              <div class="crop-handle" data-handle="ne"></div>
+              <div class="crop-handle" data-handle="sw"></div>
+              <div class="crop-handle" data-handle="se"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="crop-toolbar" id="cropToolbar">
+          <button class="btn icon-btn" id="rotateLeftBtn" title="Rotate left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>
+          </button>
+          <button class="btn icon-btn" id="rotateRightBtn" title="Rotate right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+          </button>
+          <div class="crop-ratios">
+            <button class="ratio-btn active" data-ratio="free">Free</button>
+            <button class="ratio-btn" data-ratio="1">1:1</button>
+            <button class="ratio-btn" data-ratio="1.333">4:3</button>
+            <button class="ratio-btn" data-ratio="0.5625">9:16</button>
+          </div>
+          <div class="crop-toolbar-actions">
+            <button class="btn" id="cropCancelBtn">Cancel</button>
+            <button class="btn primary" id="cropApplyBtn">Apply</button>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <span class="filename" id="filename">photo.jpg</span>
+          <span id="dimensions">— × —</span>
+        </div>
+
+        <div class="stage-actions">
+          <button class="btn" id="cropToolBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+            Crop &amp; Rotate
+          </button>
+          <button class="btn" id="newPhotoBtnMobile">New photo</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <canvas id="workCanvas"></canvas>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const viewer = document.getElementById('viewer');
+    const beforeImg = document.getElementById('beforeImg');
+    const afterImg = document.getElementById('afterImg');
+    const afterWrap = document.getElementById('afterWrap');
+    const handle = document.getElementById('handle');
+    const compare = document.getElementById('compare');
+    const procOverlay = document.getElementById('procOverlay');
+    const newPhotoBtn = document.getElementById('newPhotoBtn');
+    const newPhotoBtnMobile = document.getElementById('newPhotoBtnMobile');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const workCanvas = document.getElementById('workCanvas');
+    const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
+    const filenameEl = document.getElementById('filename');
+    const dimensionsEl = document.getElementById('dimensions');
+    const resetSlidersBtn = document.getElementById('resetSliders');
+
+    const cropToolBtn = document.getElementById('cropToolBtn');
+    const cropStage = document.getElementById('cropStage');
+    const cropImg = document.getElementById('cropImg');
+    const cropBox = document.getElementById('cropBox');
+    const cropToolbar = document.getElementById('cropToolbar');
+    const cropCancelBtn = document.getElementById('cropCancelBtn');
+    const cropApplyBtn = document.getElementById('cropApplyBtn');
+    const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+    const rotateRightBtn = document.getElementById('rotateRightBtn');
+    const ratioButtons = document.querySelectorAll('.ratio-btn');
+
+    const sliders = {
+      brightness: document.getElementById('brightness'),
+      contrast: document.getElementById('contrast'),
+      saturation: document.getElementById('saturation'),
+      sharpen: document.getElementById('sharpen'),
+      warmth: document.getElementById('warmth'),
+    };
+    const valLabels = {
+      brightness: document.getElementById('valBrightness'),
+      contrast: document.getElementById('valContrast'),
+      saturation: document.getElementById('valSaturation'),
+      sharpen: document.getElementById('valSharpen'),
+      warmth: document.getElementById('valWarmth'),
+    };
+
+    const presetButtons = document.querySelectorAll('.preset-card');
+
+    const PRESETS = {
+      natural:  { brightness: 8,  contrast: 22, saturation: 28, sharpen: 45, warmth: 0,   mono:false },
+      vivid:    { brightness: 10, contrast: 38, saturation: 55, sharpen: 55, warmth: 6,    mono:false },
+      portrait: { brightness: 12, contrast: 14, saturation: 18, sharpen: 20, warmth: 10,   mono:false },
+      mono:     { brightness: 6,  contrast: 32, saturation: 0,  sharpen: 50, warmth: 0,    mono:true  },
+    };
+
+    // ---- Tools: toggleable feature cards (beautify, deblur, denoise) ----
+    const tools = {
+      beautify: { enabled: false, amount: 55, toggle: null, slider: null, label: null },
+      deblur:   { enabled: false, amount: 60, toggle: null, slider: null, label: null },
+      denoise:  { enabled: false, amount: 45, toggle: null, slider: null, label: null },
+      autoTone: { enabled: false, amount: 70, toggle: null, slider: null, label: null },
+      bgBlur:   { enabled: false, amount: 55, toggle: null, slider: null, label: null },
+      vignette: { enabled: false, amount: 35, toggle: null, slider: null, label: null },
+    };
+
+    tools.beautify.toggle = document.getElementById('toggle-beautify');
+    tools.beautify.slider = document.getElementById('beautify');
+    tools.beautify.label  = document.getElementById('valBeautify');
+
+    tools.deblur.toggle = document.getElementById('toggle-deblur');
+    tools.deblur.slider = document.getElementById('deblurAmount');
+    tools.deblur.label  = document.getElementById('valDeblur');
+
+    tools.denoise.toggle = document.getElementById('toggle-denoise');
+    tools.denoise.slider = document.getElementById('denoise');
+    tools.denoise.label  = document.getElementById('valDenoise');
+
+    tools.autoTone.toggle = document.getElementById('toggle-autoTone');
+    tools.autoTone.slider = document.getElementById('autoTone');
+    tools.autoTone.label  = document.getElementById('valAutoTone');
+
+    tools.bgBlur.toggle = document.getElementById('toggle-bgBlur');
+    tools.bgBlur.slider = document.getElementById('bgBlur');
+    tools.bgBlur.label  = document.getElementById('valBgBlur');
+
+    tools.vignette.toggle = document.getElementById('toggle-vignette');
+    tools.vignette.slider = document.getElementById('vignette');
+    tools.vignette.label  = document.getElementById('valVignette');
+
+    Object.entries(tools).forEach(([key, tool]) => {
+      tool.toggle.addEventListener('click', () => {
+        tool.enabled = !tool.enabled;
+        tool.toggle.setAttribute('aria-checked', String(tool.enabled));
+        tool.toggle.closest('.tool-card').classList.toggle('tool-active', tool.enabled);
+        if (originalImage) runEnhancement();
+      });
+      tool.slider.addEventListener('input', () => {
+        tool.amount = parseFloat(tool.slider.value);
+        tool.label.textContent = tool.slider.value;
+        if (!tool.enabled) return;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => { if (originalImage) runEnhancement(); }, 200);
+      });
+    });
+
+    let originalImage = null;
+    let enhancedDataUrl = null;
+    let activePreset = 'natural';
+    let debounceTimer = null;
+
+    function applyPresetToSliders(preset){
+      const p = PRESETS[preset];
+      sliders.brightness.value = p.brightness;
+      sliders.contrast.value = p.contrast;
+      sliders.saturation.value = p.saturation;
+      sliders.sharpen.value = p.sharpen;
+      sliders.warmth.value = p.warmth;
+      syncLabels();
+    }
+
+    function syncLabels(){
+      valLabels.brightness.textContent = (sliders.brightness.value>=0?'+':'') + sliders.brightness.value;
+      valLabels.contrast.textContent = sliders.contrast.value;
+      valLabels.saturation.textContent = (sliders.saturation.value>=0?'+':'') + sliders.saturation.value;
+      valLabels.sharpen.textContent = sliders.sharpen.value;
+      valLabels.warmth.textContent = (sliders.warmth.value>=0?'+':'') + sliders.warmth.value;
+    }
+
+    presetButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        presetButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activePreset = btn.dataset.preset;
+        applyPresetToSliders(activePreset);
+        if (originalImage) runEnhancement();
+      });
+    });
+
+    Object.values(sliders).forEach(s => {
+      s.addEventListener('input', () => {
+        syncLabels();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => { if (originalImage) runEnhancement(); }, 200);
+      });
+    });
+
+    resetSlidersBtn.addEventListener('click', () => {
+      applyPresetToSliders(activePreset);
+      if (originalImage) runEnhancement();
+    });
+
+    syncLabels();
+
+    // ---- Drag & drop / click ----
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+    });
+
+    ['dragenter','dragover'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+    );
+    ['dragleave','drop'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+    );
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file){
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          originalImage = img;
+          previewSourceData = null;
+          beforeImg.src = e.target.result;
+          dropzone.style.display = 'none';
+          viewer.style.display = 'flex';
+          newPhotoBtn.style.display = 'flex';
+          downloadBtn.disabled = false;
+          filenameEl.textContent = file.name;
+          dimensionsEl.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+          runEnhancement();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ---- Shared pixel-processing core ----
+    // Used directly on the main thread as a guaranteed-working fallback,
+    // and also embedded into the worker source below when the host allows
+    // Web Workers. Some sandboxed hosting environments block constructing
+    // a Worker from a blob: URL for security reasons — when that happens
+    // we transparently fall back to running this same code inline.
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+    function clampInt(v, min, max){ return Math.max(min, Math.min(max, v|0)); }
+    function lerp(a,b,t){ return a + (b-a)*t; }
+
+    function boxBlur(data, w, h, radius){
+      const out = new Uint8ClampedArray(data.length);
+      const temp = new Float32Array(data.length);
+
+      // Horizontal pass using a running sum: instead of re-summing the
+      // whole (2*radius+1)-wide window at every pixel (which makes cost
+      // scale with radius), we slide the window one step at a time,
+      // adding the pixel entering on the right and removing the one
+      // leaving on the left. This makes blur cost roughly constant
+      // regardless of radius — essential for Background Blur, which
+      // needs a much larger radius than the sharpen/denoise filters.
+      for (let y=0; y<h; y++){
+        const rowOffset = y*w*4;
+        let r=0,g=0,b=0,a=0;
+        // seed the window for x=0 (edge-clamped)
+        for (let dx=-radius; dx<=radius; dx++){
+          const xx = clampInt(dx, 0, w-1);
+          const idx = rowOffset + xx*4;
+          r+=data[idx]; g+=data[idx+1]; b+=data[idx+2]; a+=data[idx+3];
+        }
+        const windowSize = radius*2+1;
+        for (let x=0; x<w; x++){
+          const idx = rowOffset + x*4;
+          temp[idx]=r/windowSize; temp[idx+1]=g/windowSize; temp[idx+2]=b/windowSize; temp[idx+3]=a/windowSize;
+
+          const addX = clampInt(x+radius+1, 0, w-1);
+          const removeX = clampInt(x-radius, 0, w-1);
+          if (addX !== removeX){
+            const addIdx = rowOffset + addX*4;
+            const remIdx = rowOffset + removeX*4;
+            r += data[addIdx]   - data[remIdx];
+            g += data[addIdx+1] - data[remIdx+1];
+            b += data[addIdx+2] - data[remIdx+2];
+            a += data[addIdx+3] - data[remIdx+3];
+          }
+        }
+      }
+
+      // Vertical pass, same running-sum technique down each column.
+      for (let x=0; x<w; x++){
+        let r=0,g=0,b=0,a=0;
+        for (let dy=-radius; dy<=radius; dy++){
+          const yy = clampInt(dy, 0, h-1);
+          const idx = (yy*w+x)*4;
+          r+=temp[idx]; g+=temp[idx+1]; b+=temp[idx+2]; a+=temp[idx+3];
+        }
+        const windowSize = radius*2+1;
+        for (let y=0; y<h; y++){
+          const idx = (y*w+x)*4;
+          out[idx]=r/windowSize; out[idx+1]=g/windowSize; out[idx+2]=b/windowSize; out[idx+3]=a/windowSize;
+
+          const addY = clampInt(y+radius+1, 0, h-1);
+          const removeY = clampInt(y-radius, 0, h-1);
+          if (addY !== removeY){
+            const addIdx = (addY*w+x)*4;
+            const remIdx = (removeY*w+x)*4;
+            r += temp[addIdx]   - temp[remIdx];
+            g += temp[addIdx+1] - temp[remIdx+1];
+            b += temp[addIdx+2] - temp[remIdx+2];
+            a += temp[addIdx+3] - temp[remIdx+3];
+          }
+        }
+      }
+      return out;
+    }
+
+    // Fast approximation of exp(x) for x <= 0, accurate enough for the
+    // smooth falloff weighting we need here, without the cost of a real
+    // Math.exp() call inside a hot per-pixel, per-neighbor loop.
+    function fastNegExp(x){
+      // x is always <= 0 here. Clamp range, then use a cheap rational approx.
+      if (x < -8) return 0;
+      const y = 1 + x/8;
+      let r = y*y; r = r*r; r = r*r; // (1 + x/8)^8 ≈ e^x for moderate |x|
+      return r < 0 ? 0 : r;
+    }
+
+    // Edge-preserving smoothing (a simplified bilateral filter): like boxBlur,
+    // but each neighbor's contribution is weighted down the more different
+    // its color is from the center pixel. This smooths flat, grainy areas
+    // (skin, sky, walls) while leaving real edges (eyes, hairlines, object
+    // outlines) sharp — true denoise instead of a blur that just smears
+    // detail away.
+    //
+    // `maskFn`, if provided, is called once per pixel as maskFn(r,g,b) and
+    // must return 0..1. Pixels scoring 0 skip the entire O(radius^2)
+    // neighbor loop and are copied through unchanged — this is the key
+    // performance fix for Beautify, which previously ran the full-cost
+    // blur over every pixel in the image even though it only ever used
+    // the result for skin-colored ones (a small minority of most photos).
+    function bilateralSmooth(data, w, h, radius, strength, maskArray){
+      const out = new Uint8ClampedArray(data.length);
+      const colorSigma = 8 + strength * 45;
+      const colorFactor = -1 / (2 * colorSigma * colorSigma);
+      const n = w*h;
+
+      for (let p=0; p<n; p++){
+        const ci = p*4;
+
+        if (maskArray && maskArray[p] <= 0){
+          out[ci] = data[ci]; out[ci+1] = data[ci+1]; out[ci+2] = data[ci+2]; out[ci+3] = data[ci+3];
+          continue;
+        }
+
+        const x = p % w, y = (p - x) / w;
+        const cr = data[ci], cg = data[ci+1], cb = data[ci+2];
+        let rSum=0, gSum=0, bSum=0, wSum=0;
+        for (let dy=-radius; dy<=radius; dy++){
+          const yy = clampInt(y+dy, 0, h-1);
+          for (let dx=-radius; dx<=radius; dx++){
+            const xx = clampInt(x+dx, 0, w-1);
+            const ni = (yy*w+xx)*4;
+            const nr = data[ni], ng = data[ni+1], nb = data[ni+2];
+            const colorDist = (nr-cr)*(nr-cr) + (ng-cg)*(ng-cg) + (nb-cb)*(nb-cb);
+            const weight = fastNegExp(colorDist * colorFactor);
+            rSum += nr * weight; gSum += ng * weight; bSum += nb * weight;
+            wSum += weight;
+          }
+        }
+        out[ci]   = rSum / wSum;
+        out[ci+1] = gSum / wSum;
+        out[ci+2] = bSum / wSum;
+        out[ci+3] = data[ci+3];
+      }
+      return out;
+    }
+
+    // Skin detection by color range (YCbCr-ish heuristic, no face model).
+    // Returns 0..1 "how skin-like" per pixel, used to blend beautify
+    // effects in only where it actually looks like skin, with soft falloff
+    // so there's no hard edge around the effect.
+    function skinMask(r, g, b){
+      const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
+      const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+      if (lum < 30 || lum > 250) return 0; // too dark/blown-out to judge
+      // skin tends to have r > g > b with a moderate, not extreme, spread
+      const rgDiff = r - g;
+      const rbDiff = r - b;
+      if (rgDiff < 4 || rbDiff < 10) return 0;
+      const spread = maxC - minC;
+      if (spread < 8 || spread > 140) return 0;
+      // score peaks for classic warm skin ratios, fades at the boundaries
+      let score = clamp((rgDiff - 4) / 26, 0, 1) * clamp((rbDiff - 10) / 55, 0, 1);
+      score *= clamp(1 - Math.abs(lum - 150) / 140, 0, 1);
+      return score;
+    }
+
+    // Auto-tone: analyzes the luminance histogram and stretches it so the
+    // darkest meaningful pixels go toward black and the brightest go
+    // toward white (a simplified auto-levels), then applies a gentle
+    // S-curve for punch. This is real histogram-based correction, not a
+    // fixed brightness bump — it adapts to how dark/flat/blown-out the
+    // source photo actually is.
+    function applyAutoTone(data, w, h, strength){
+      const n = w*h;
+      const hist = new Uint32Array(256);
+      for (let p=0; p<n; p++){
+        const i = p*4;
+        const lum = Math.round(0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2]);
+        hist[clampInt(lum, 0, 255)]++;
+      }
+      // find 1st and 99th percentile of the luminance distribution —
+      // robust to a few stray pure-black/white outlier pixels
+      const lowClip = n * 0.01, highClip = n * 0.99;
+      let cum = 0, lo = 0, hi = 255;
+      for (let v=0; v<256; v++){ cum += hist[v]; if (cum >= lowClip){ lo = v; break; } }
+      cum = 0;
+      for (let v=255; v>=0; v--){ cum += hist[v]; if (n - cum <= highClip){ hi = v; break; } }
+      if (hi - lo < 10) return; // already flat/uniform, nothing useful to stretch
+
+      const range = hi - lo;
+      for (let i=0; i<data.length; i+=4){
+        for (let c=0;c<3;c++){
+          let v = data[i+c];
+          let stretched = ((v - lo) / range) * 255;
+          // gentle S-curve for a touch of punch in the midtones
+          const t = stretched / 255;
+          const curved = t < 0.5
+            ? 2*t*t
+            : 1 - 2*(1-t)*(1-t);
+          stretched = lerp(stretched, curved*255, 0.35);
+          data[i+c] = clamp(lerp(v, stretched, strength), 0, 255);
+        }
+      }
+    }
+
+    // Vignette: darkens corners radially from the center, classic
+    // photographic framing effect.
+    function applyVignette(data, w, h, strength){
+      const cx = w/2, cy = h/2;
+      const maxDist = Math.sqrt(cx*cx + cy*cy);
+      for (let y=0; y<h; y++){
+        const dy = y - cy;
+        for (let x=0; x<w; x++){
+          const dx = x - cx;
+          const dist = Math.sqrt(dx*dx + dy*dy) / maxDist;
+          // falls off smoothly starting around 55% of the way to the corner
+          const falloff = clamp((dist - 0.45) / 0.55, 0, 1);
+          const darken = 1 - falloff * falloff * strength * 0.7;
+          const i = (y*w+x)*4;
+          data[i]   *= darken;
+          data[i+1] *= darken;
+          data[i+2] *= darken;
+        }
+      }
+    }
+
+    // Background blur ("portrait mode"): no real depth/face model is used
+    // — instead we build a rough subject mask from skin/hair-toned pixels
+    // weighted toward the center of the frame (where a portrait subject
+    // usually sits), then blur everything outside that mask. Honest
+    // limitation: works best on a single centered subject against a
+    // busier background, not on complex multi-subject or non-portrait
+    // scenes.
+    function subjectMask(data, w, h){
+      const n = w*h;
+      const mask = new Float32Array(n);
+      const cx = w/2, cy = h/2;
+      const maxDist = Math.sqrt(cx*cx + cy*cy);
+      for (let p=0; p<n; p++){
+        const x = p % w, y = (p - x) / w;
+        const i = p*4;
+        const skin = skinMask(data[i], data[i+1], data[i+2]);
+        const dist = Math.sqrt((x-cx)**2 + (y-cy)**2) / maxDist;
+        const centerWeight = clamp(1 - dist / 0.75, 0, 1);
+        // subject = skin-toned OR simply close to the center, whichever is stronger
+        mask[p] = Math.max(skin * 1.0, centerWeight * 0.55);
+      }
+      return mask;
+    }
+
+    function applyBackgroundBlur(data, w, h, strength){
+      const mask = subjectMask(data, w, h);
+      const blurred = boxBlur(data, w, h, 4 + Math.round(strength * 4));
+      const n = w*h;
+      for (let p=0; p<n; p++){
+        const i = p*4;
+        // invert mask: low subject-likelihood = blur in fully
+        const blurAmount = (1 - mask[p]) * strength;
+        for (let c=0;c<3;c++){
+          data[i+c] = lerp(data[i+c], blurred[i+c], blurAmount);
+        }
+      }
+    }
+
+    function processPixels(data, w, h, opts){
+      if (opts.autoTone > 0){
+        applyAutoTone(data, w, h, opts.autoTone / 100);
+      }
+
+      let rSum=0,gSum=0,bSum=0,count=0;
+      for (let i=0; i<data.length; i+=16){
+        rSum += data[i]; gSum += data[i+1]; bSum += data[i+2]; count++;
+      }
+      const rAvg = rSum/count, gAvg = gSum/count, bAvg = bSum/count;
+      const gray = (rAvg+gAvg+bAvg)/3;
+      const wbStrength = 0.5;
+      const rGain = lerp(1, clamp(gray/rAvg, 0.85, 1.2), wbStrength);
+      const gGain = lerp(1, clamp(gray/gAvg, 0.85, 1.2), wbStrength);
+      const bGain = lerp(1, clamp(gray/bAvg, 0.85, 1.2), wbStrength);
+
+      const contrastFactor = 1 + (opts.contrast / 100);
+      const satFactor = 1 + (opts.saturation / 100);
+      const brightnessLift = opts.brightness;
+      const warmR = 1 + (opts.warmth > 0 ? opts.warmth/200 : 0);
+      const warmB = 1 + (opts.warmth < 0 ? -opts.warmth/200 : 0);
+      const coolB = 1 + (opts.warmth > 0 ? opts.warmth/250 : 0);
+      const coolR = 1 + (opts.warmth < 0 ? -opts.warmth/250 : 0);
+
+      for (let i=0; i<data.length; i+=4){
+        let r = data[i]   * rGain;
+        let g = data[i+1] * gGain;
+        let b = data[i+2] * bGain;
+
+        r *= warmR;
+        b *= warmB / coolB;
+        r *= (opts.warmth < 0 ? coolR : 1);
+
+        r = (r - 128) * contrastFactor + 128 + brightnessLift;
+        g = (g - 128) * contrastFactor + 128 + brightnessLift;
+        b = (b - 128) * contrastFactor + 128 + brightnessLift;
+
+        const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+
+        if (opts.mono){
+          r = g = b = lum;
+        } else {
+          r = lum + (r - lum) * satFactor;
+          g = lum + (g - lum) * satFactor;
+          b = lum + (b - lum) * satFactor;
+        }
+
+        data[i]   = clamp(r, 0, 255);
+        data[i+1] = clamp(g, 0, 255);
+        data[i+2] = clamp(b, 0, 255);
+      }
+
+      // ---- Denoise (edge-preserving) — before sharpening, so we remove
+      // grain instead of amplifying it ----
+      if (opts.denoise > 0){
+        const strength = opts.denoise / 100;
+        const radius = strength > 0.6 ? 2 : 1;
+        const smoothed = bilateralSmooth(data, w, h, radius, strength);
+        for (let i=0; i<data.length; i+=4){
+          for (let c=0;c<3;c++){
+            data[i+c] = lerp(data[i+c], smoothed[i+c], strength);
+          }
+        }
+      }
+
+      // ---- Sharpen / Deblur ----
+      // "deblurMode" pushes the unsharp mask harder and uses a wider blur
+      // radius to recover edges from genuinely soft/blurry source photos,
+      // rather than the gentler polish used for normal sharpening.
+      if (opts.sharpen > 0){
+        const amount = opts.sharpen / 100;
+        const radius = opts.deblurMode ? 2 : 1;
+        const blurred = boxBlur(data, w, h, radius);
+        const sharpAmount = (opts.deblurMode ? 1.1 : 0.65) * amount;
+        for (let i=0; i<data.length; i+=4){
+          for (let c=0;c<3;c++){
+            const diff = data[i+c] - blurred[i+c];
+            data[i+c] = clamp(data[i+c] + diff * sharpAmount * 2, 0, 255);
+          }
+        }
+      }
+
+      // ---- Portrait Beautify (skin-tone aware) ----
+      // Detects skin by color, not face shape, then blends in: gentle
+      // edge-preserving smoothing (softens texture/blemishes) and a small
+      // brightness lift (the classic "glow"), feathered by how strongly
+      // each pixel reads as skin — so it never bleeds onto eyes, hair,
+      // teeth, or the background with a hard edge.
+      if (opts.beautify > 0){
+        const strength = opts.beautify / 100;
+        const n = w*h;
+        const mask = new Float32Array(n);
+        for (let p=0; p<n; p++){
+          const i = p*4;
+          mask[p] = skinMask(data[i], data[i+1], data[i+2]);
+        }
+        // radius 1 (not 2) keeps this fast; combined with the mask-skip
+        // above, this only does real work on skin-colored pixels, which
+        // is normally a small fraction of the frame.
+        const smoothed = bilateralSmooth(data, w, h, 1, 0.55, mask);
+        for (let p=0; p<n; p++){
+          if (mask[p] <= 0) continue;
+          const i = p*4;
+          const blend = mask[p] * strength;
+          for (let c=0;c<3;c++){
+            const softened = lerp(data[i+c], smoothed[i+c], blend * 0.8);
+            data[i+c] = clamp(softened + blend * 6, 0, 255); // subtle glow lift
+          }
+        }
+      }
+
+      // ---- Background Blur ("portrait mode") ----
+      // Runs after beautify so skin smoothing still applies to a sharp
+      // subject before the background gets blurred around it.
+      if (opts.bgBlur > 0){
+        applyBackgroundBlur(data, w, h, opts.bgBlur / 100);
+      }
+
+      // ---- Vignette ----
+      // Last step: a framing effect applied over the final image.
+      if (opts.vignette > 0){
+        applyVignette(data, w, h, opts.vignette / 100);
+      }
+
+      return data;
+    }
+
+    // ---- Try to set up a Web Worker; fall back silently if blocked ----
+    let worker = null;
+    let workerAvailable = false;
+
+    function tryCreateWorker(){
+      try {
+        const workerSource = `
+          ${clamp.toString()}
+          ${clampInt.toString()}
+          ${lerp.toString()}
+          ${boxBlur.toString()}
+          ${fastNegExp.toString()}
+          ${bilateralSmooth.toString()}
+          ${skinMask.toString()}
+          ${applyAutoTone.toString()}
+          ${applyVignette.toString()}
+          ${subjectMask.toString()}
+          ${applyBackgroundBlur.toString()}
+          ${processPixels.toString()}
+          self.onmessage = function(e){
+            const { reqId, buffer, w, h, opts } = e.data;
+            const data = new Uint8ClampedArray(buffer);
+            const result = processPixels(data, w, h, opts);
+            self.postMessage({ reqId, buffer: result.buffer, w, h }, [result.buffer]);
+          };
+        `;
+        const workerBlob = new Blob([workerSource], { type: 'application/javascript' });
+        const w = new Worker(URL.createObjectURL(workerBlob));
+        // Surface async construction failures too (some hosts reject at
+        // first postMessage rather than at `new Worker(...)`).
+        w.onerror = () => {
+          workerAvailable = false;
+          worker = null;
+        };
+        return w;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    worker = tryCreateWorker();
+    workerAvailable = !!worker;
+
+    // Cap the working resolution for snappy previews. The same resolution
+    // is what gets downloaded — no separate re-processing step, so the
+    // download is instant.
+    const PREVIEW_MAX_DIM = 2000;
+
+    let requestCounter = 0;
+    let latestAppliedReqId = -1;
+    let previewSourceData = null; // { data, w, h } at preview resolution
+    let watchdogTimer = null;
+
+    if (worker){
+      worker.onmessage = (e) => {
+        const { reqId, buffer, w, h } = e.data;
+        if (reqId < latestAppliedReqId) return; // stale result, discard
+        latestAppliedReqId = reqId;
+        clearTimeout(watchdogTimer);
+        applyResultToPreview(buffer, w, h);
+      };
+    }
+
+    function getCurrentOpts(){
+      const baseSharpen = parseFloat(sliders.sharpen.value);
+      const effectiveSharpen = tools.deblur.enabled
+        ? Math.max(baseSharpen, tools.deblur.amount)
+        : baseSharpen;
+      return {
+        brightness: parseFloat(sliders.brightness.value),
+        contrast: parseFloat(sliders.contrast.value),
+        saturation: parseFloat(sliders.saturation.value),
+        sharpen: effectiveSharpen,
+        warmth: parseFloat(sliders.warmth.value),
+        mono: PRESETS[activePreset].mono,
+        denoise: tools.denoise.enabled ? tools.denoise.amount : 0,
+        beautify: tools.beautify.enabled ? tools.beautify.amount : 0,
+        deblurMode: tools.deblur.enabled,
+        autoTone: tools.autoTone.enabled ? tools.autoTone.amount : 0,
+        vignette: tools.vignette.enabled ? tools.vignette.amount : 0,
+        bgBlur: tools.bgBlur.enabled ? tools.bgBlur.amount : 0,
+      };
+    }
+
+    function buildPreviewSource(img){
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, PREVIEW_MAX_DIM / Math.max(w, h));
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+      workCanvas.width = w;
+      workCanvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      previewSourceData = { data: imageData.data, w, h };
+    }
+
+    function applyResultToPreview(data, w, h){
+      const imageData = new ImageData(new Uint8ClampedArray(data), w, h);
+      workCanvas.width = w;
+      workCanvas.height = h;
+      ctx.putImageData(imageData, 0, 0);
+
+      const dataUrl = workCanvas.toDataURL('image/jpeg', 0.92);
+      enhancedDataUrl = dataUrl;
+
+      afterImg.onload = () => {
+        afterWrap.style.transition = 'opacity .3s ease';
+        afterWrap.style.opacity = 1;
+        procOverlay.classList.remove('active');
+      };
+      afterImg.src = dataUrl;
+    }
+
+    // ---- Core enhancement (fast preview pass) ----
+    function runEnhancement(){
+      if (!originalImage) return;
+      if (!previewSourceData) buildPreviewSource(originalImage);
+
+      procOverlay.classList.add('active');
+      afterWrap.style.opacity = 0;
+
+      const reqId = ++requestCounter;
+      const { data, w, h } = previewSourceData;
+      const opts = getCurrentOpts();
+
+      if (workerAvailable && worker){
+        const copy = new Uint8ClampedArray(data); // worker takes ownership of this buffer
+
+        clearTimeout(watchdogTimer);
+        watchdogTimer = setTimeout(() => {
+          // If a job takes unusually long (very low-power device), surface it
+          // instead of leaving the user staring at "Developing…" forever.
+          const label = procOverlay.querySelector('.filmstrip-label');
+          if (label) label.textContent = 'Still working — large photo…';
+        }, 4000);
+
+        try {
+          worker.postMessage(
+            { reqId, buffer: copy.buffer, w, h, opts },
+            [copy.buffer]
+          );
+          return;
+        } catch (err) {
+          // Posting failed (host revoked worker access mid-session) — fall
+          // through to the main-thread path below instead of hanging.
+          workerAvailable = false;
+        }
+      }
+
+      // Main-thread fallback: still capped to PREVIEW_MAX_DIM so it stays
+      // fast even without a worker. Runs on the next frame so the
+      // "Developing…" animation gets a chance to paint first.
+      requestAnimationFrame(() => {
+        if (reqId < latestAppliedReqId) return;
+        latestAppliedReqId = reqId;
+        const copy = new Uint8ClampedArray(data);
+        const result = processPixels(copy, w, h, opts);
+        applyResultToPreview(result, w, h);
+      });
+    }
+
+    // ---- Before/after slider drag ----
+    let dragging = false;
+    function setHandle(clientX){
+      const rect = compare.getBoundingClientRect();
+      let pct = ((clientX - rect.left) / rect.width) * 100;
+      pct = clamp(pct, 0, 100);
+      handle.style.left = pct + '%';
+      afterWrap.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
+    }
+    handle.addEventListener('mousedown', () => dragging = true);
+    window.addEventListener('mouseup', () => dragging = false);
+    window.addEventListener('mousemove', e => { if (dragging) setHandle(e.clientX); });
+    handle.addEventListener('touchstart', () => dragging = true, {passive:true});
+    window.addEventListener('touchend', () => dragging = false);
+    window.addEventListener('touchmove', e => { if (dragging && e.touches[0]) setHandle(e.touches[0].clientX); }, {passive:true});
+    compare.addEventListener('click', e => {
+      if (e.target === handle || handle.contains(e.target)) return;
+      setHandle(e.clientX);
+    });
+
+    // ---- Crop & Rotate ----
+    let cropRotation = 0; // 0, 90, 180, 270 — degrees, always a multiple of 90
+    let cropRatio = null; // null = free, otherwise width/height ratio
+    let cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }; // fractions of displayed image box, 0..1
+
+    function enterCropMode(){
+      if (!originalImage) return;
+      cropImg.src = beforeImg.src;
+      cropRotation = 0;
+      cropRatio = null;
+      ratioButtons.forEach(b => b.classList.toggle('active', b.dataset.ratio === 'free'));
+      cropImg.style.transform = 'rotate(0deg)';
+      cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+      cropStage.classList.add('active');
+      cropToolbar.classList.add('active');
+      requestAnimationFrame(layoutCropBox);
+    }
+
+    function exitCropMode(){
+      cropStage.classList.remove('active');
+      cropToolbar.classList.remove('active');
+    }
+
+    // Maps the image's natural (unrotated) display box within .compare,
+    // accounting for object-fit: contain letterboxing, so the crop box's
+    // on-screen position can be translated to real pixel coordinates.
+    function getDisplayedImageBox(){
+      const containerRect = compare.getBoundingClientRect();
+      // for 90/270 rotation, the rotated image's effective aspect ratio swaps
+      const rotated90 = (cropRotation === 90 || cropRotation === 270);
+      const natW = rotated90 ? originalImage.naturalHeight : originalImage.naturalWidth;
+      const natH = rotated90 ? originalImage.naturalWidth : originalImage.naturalHeight;
+      const containerRatio = containerRect.width / containerRect.height;
+      const imgRatio = natW / natH;
+      let boxW, boxH;
+      if (imgRatio > containerRatio){
+        boxW = containerRect.width;
+        boxH = boxW / imgRatio;
+      } else {
+        boxH = containerRect.height;
+        boxW = boxH * imgRatio;
+      }
+      const boxLeft = (containerRect.width - boxW) / 2;
+      const boxTop = (containerRect.height - boxH) / 2;
+      return { left: boxLeft, top: boxTop, width: boxW, height: boxH, containerRect };
+    }
+
+    function layoutCropBox(){
+      const box = getDisplayedImageBox();
+      cropBox.style.left   = (box.left + cropRect.x * box.width) + 'px';
+      cropBox.style.top    = (box.top + cropRect.y * box.height) + 'px';
+      cropBox.style.width  = (cropRect.w * box.width) + 'px';
+      cropBox.style.height = (cropRect.h * box.height) + 'px';
+    }
+
+    function clampCropRect(){
+      cropRect.w = clamp(cropRect.w, 0.08, 1);
+      cropRect.h = clamp(cropRect.h, 0.08, 1);
+      cropRect.x = clamp(cropRect.x, 0, 1 - cropRect.w);
+      cropRect.y = clamp(cropRect.y, 0, 1 - cropRect.h);
+    }
+
+    cropToolBtn.addEventListener('click', enterCropMode);
+    cropCancelBtn.addEventListener('click', exitCropMode);
+
+    rotateLeftBtn.addEventListener('click', () => {
+      cropRotation = (cropRotation - 90 + 360) % 360;
+      cropImg.style.transform = `rotate(${cropRotation}deg)`;
+      cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+      requestAnimationFrame(layoutCropBox);
+    });
+    rotateRightBtn.addEventListener('click', () => {
+      cropRotation = (cropRotation + 90) % 360;
+      cropImg.style.transform = `rotate(${cropRotation}deg)`;
+      cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+      requestAnimationFrame(layoutCropBox);
+    });
+
+    ratioButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        ratioButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const r = btn.dataset.ratio;
+        cropRatio = r === 'free' ? null : parseFloat(r);
+        if (cropRatio){
+          // adjust height to match ratio, keeping the box's top-left fixed
+          const box = getDisplayedImageBox();
+          const pxW = cropRect.w * box.width;
+          const pxH = pxW / cropRatio;
+          cropRect.h = pxH / box.height;
+          clampCropRect();
+        }
+        layoutCropBox();
+      });
+    });
+
+    // Dragging the crop box (move) and its corner handles (resize)
+    let cropDrag = null; // { mode: 'move'|'nw'|'ne'|'sw'|'se', startX, startY, startRect }
+
+    function pointerXY(e){
+      if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    cropBox.addEventListener('mousedown', e => startCropDrag('move', e));
+    cropBox.addEventListener('touchstart', e => startCropDrag('move', e), {passive:false});
+    cropBox.querySelectorAll('.crop-handle').forEach(h => {
+      h.addEventListener('mousedown', e => { e.stopPropagation(); startCropDrag(h.dataset.handle, e); });
+      h.addEventListener('touchstart', e => { e.stopPropagation(); startCropDrag(h.dataset.handle, e); }, {passive:false});
+    });
+
+    function startCropDrag(mode, e){
+      e.preventDefault();
+      const p = pointerXY(e);
+      cropDrag = { mode, startX: p.x, startY: p.y, startRect: { ...cropRect } };
+    }
+
+    window.addEventListener('mousemove', onCropDragMove);
+    window.addEventListener('touchmove', onCropDragMove, {passive:false});
+    window.addEventListener('mouseup', () => cropDrag = null);
+    window.addEventListener('touchend', () => cropDrag = null);
+
+    function onCropDragMove(e){
+      if (!cropDrag) return;
+      e.preventDefault();
+      const box = getDisplayedImageBox();
+      const p = pointerXY(e);
+      const dxFrac = (p.x - cropDrag.startX) / box.width;
+      const dyFrac = (p.y - cropDrag.startY) / box.height;
+      const start = cropDrag.startRect;
+
+      if (cropDrag.mode === 'move'){
+        cropRect.x = start.x + dxFrac;
+        cropRect.y = start.y + dyFrac;
+      } else {
+        let { x, y, w, h } = start;
+        if (cropDrag.mode.includes('w')){ x = start.x + dxFrac; w = start.w - dxFrac; }
+        if (cropDrag.mode.includes('e')){ w = start.w + dxFrac; }
+        if (cropDrag.mode.includes('n')){ y = start.y + dyFrac; h = start.h - dyFrac; }
+        if (cropDrag.mode.includes('s')){ h = start.h + dyFrac; }
+
+        if (cropRatio){
+          // lock height to width / ratio, anchored from the side being dragged
+          h = w / cropRatio;
+          if (cropDrag.mode.includes('n')) y = start.y + start.h - h;
+        }
+        cropRect = { x, y, w, h };
+      }
+      clampCropRect();
+      layoutCropBox();
+    }
+
+    cropApplyBtn.addEventListener('click', () => {
+      const natW = originalImage.naturalWidth, natH = originalImage.naturalHeight;
+      const rotated90 = (cropRotation === 90 || cropRotation === 270);
+
+      // Step 1: draw the rotated full image onto a canvas sized for the
+      // rotated orientation.
+      const rotW = rotated90 ? natH : natW;
+      const rotH = rotated90 ? natW : natH;
+      const rotCanvas = document.createElement('canvas');
+      rotCanvas.width = rotW;
+      rotCanvas.height = rotH;
+      const rotCtx = rotCanvas.getContext('2d');
+      rotCtx.translate(rotW/2, rotH/2);
+      rotCtx.rotate(cropRotation * Math.PI / 180);
+      rotCtx.drawImage(originalImage, -natW/2, -natH/2, natW, natH);
+
+      // Step 2: crop that rotated canvas using the fractional crop rect
+      const cropPxX = cropRect.x * rotW;
+      const cropPxY = cropRect.y * rotH;
+      const cropPxW = cropRect.w * rotW;
+      const cropPxH = cropRect.h * rotH;
+
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = Math.round(cropPxW);
+      finalCanvas.height = Math.round(cropPxH);
+      const finalCtx = finalCanvas.getContext('2d');
+      finalCtx.drawImage(rotCanvas, cropPxX, cropPxY, cropPxW, cropPxH, 0, 0, cropPxW, cropPxH);
+
+      const newImg = new Image();
+      newImg.onload = () => {
+        originalImage = newImg;
+        previewSourceData = null;
+        beforeImg.src = finalCanvas.toDataURL('image/jpeg', 0.95);
+        dimensionsEl.textContent = `${newImg.naturalWidth} × ${newImg.naturalHeight}`;
+        exitCropMode();
+        runEnhancement();
+      };
+      newImg.src = finalCanvas.toDataURL('image/jpeg', 0.95);
+    });
+
+    window.addEventListener('resize', () => {
+      if (cropStage.classList.contains('active')) layoutCropBox();
+    });
+
+    // ---- Buttons ----
+    function resetToDropzone(){
+      viewer.style.display = 'none';
+      dropzone.style.display = 'flex';
+      newPhotoBtn.style.display = 'none';
+      downloadBtn.disabled = true;
+      fileInput.value = '';
+      originalImage = null;
+      handle.style.left = '50%';
+      afterWrap.style.clipPath = 'inset(0 50% 0 0)';
+    }
+    newPhotoBtn.addEventListener('click', resetToDropzone);
+    newPhotoBtnMobile.addEventListener('click', resetToDropzone);
+
+    downloadBtn.addEventListener('click', () => {
+      if (!enhancedDataUrl) return;
+      downloadDataUrl(enhancedDataUrl, buildDownloadName());
+    });
+
+    function buildDownloadName(){
+      const base = (filenameEl.textContent || 'photo').replace(/\.[^/.]+$/, '');
+      return `tracy-${base || 'enhanced'}.jpg`;
+    }
+
+    // Robust download: converts the data URL to a Blob and drives a real,
+    // DOM-attached anchor click. This is more reliable across mobile
+    // browsers and embedded webviews than calling .click() on a detached
+    // <a> with a raw data: URL, which some environments silently ignore.
+    function downloadDataUrl(dataUrl, fileName){
+      try {
+        const [header, base64] = dataUrl.split(',');
+        const mimeMatch = header.match(/data:(.*?);base64/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.rel = 'noopener';
+        a.style.position = 'fixed';
+        a.style.opacity = '0';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Some browsers (notably ones that open the image in a new tab
+        // instead of saving it) need the blob URL kept alive briefly.
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+
+        showDownloadConfirmation();
+      } catch (err) {
+        // Fallback: open in a new tab so the user can long-press/save manually.
+        const win = window.open(dataUrl, '_blank');
+        if (!win) {
+          alert('Could not start the download automatically. Right-click (or long-press) the preview image and choose "Save image as…".');
+        }
+      }
+    }
+
+    function showDownloadConfirmation(){
+      const original = downloadBtn.innerHTML;
+      downloadBtn.classList.add('confirmed');
+      downloadBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Saved
+      `;
+      setTimeout(() => {
+        downloadBtn.innerHTML = original;
+        downloadBtn.classList.remove('confirmed');
+      }, 1800);
+    }
+  </script>
+
+</body>
+</html>
